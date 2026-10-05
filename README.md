@@ -120,19 +120,28 @@ $ python app.py ask '...'
 
 **The three tools, tested one at a time**
 
+**The three tools, tested one at a time**
+
 ```
 $ python -c "from tools import search_listings; print(search_listings('graphic tee', max_price=30))"
-
+[{'id': 'lst_002', 'title': 'Y2K Baby Tee — Butterfly Print', 'price': 18.0, 'platform': 'depop', ...}, {'id': 'lst_006', 'title': 'Graphic Tee — 2003 Tour Bootleg Style', 'price': 24.0, 'platform': 'depop', ...}, ...6 results total, all under $30]
 ```
 
 ```
-$ python -c "from tools import suggest_outfit; ..."
+$ python -c "from tools import suggest_outfit; from utils.data_loader import get_example_wardrobe, load_listings; print(suggest_outfit(load_listings()[0], get_example_wardrobe()))"
+Here are two specific outfit ideas using the vintage Levi's 501 jeans and your current wardrobe:
 
+Outfit 1: Casual & Sporty
+Top: White ribbed tank top
+Bottoms: Vintage Levi's 501 Jeans (Medium Wash)
+Outerwear: Oversized grey crewneck sweatshirt
+Shoes: Chunky white sneakers
+...(and a second outfit, naming more real wardrobe pieces)
 ```
 
 ```
-$ python -c "from tools import create_fit_card; ..."
-
+$ python -c "from tools import create_fit_card; from utils.data_loader import load_listings; print(create_fit_card('jeans and white sneakers', load_listings()[0]))"
+Scored these vintage Levi's 501 jeans on Depop for just $38 and I am never taking them off. Throwing them on with fresh white sneakers gives off that effortlessly cool, 90s off-duty model energy. Nothing beats finding a piece with this much lived-in soul.
 ```
 
 ---
