@@ -59,24 +59,25 @@
 
 ### `search_listings`
 
-- **What it does:**
-- **Inputs:** <!-- name and type each: `max_price` (float), not "a price" -->
-- **Returns:**
-- **When it has nothing:**
+- **What it does:** Searches the listings data for items matching a description, with optional filters for size and maximum price.
+- **Inputs:** `description` (str) — keywords describing what the user wants. `size` (str or None) — a size string to filter by; None skips size filtering. `max_price` (float or None) — maximum price, inclusive; None skips price filtering.
+- **Returns:** A list of matching listing dicts, best match first, each with the fields `id`, `title`, `description`, `category`, `style_tags` (list), `size`, `condition`, `price` (float), `colors` (list), `brand` (str or None), `platform`. Sorted by keyword overlap score with `description`, highest first, capped at `config.SEARCH_RESULT_LIMIT`.
+- **When it has nothing:** Returns an empty list — not None, not an exception.
+- **Size-matching rule:** I split both the requested size and the listing's size string into tokens on whitespace and `/` (so `"S/M"` becomes `["S", "M"]` and `"W30 L30"` becomes `["W30", "L30"]`), uppercase every token, and only count it a match if one of the requested tokens exactly equals one of the listing's tokens. This is deliberately stricter than a substring test, since `"S" in "US 9"` and `"L" in "XL"` are both true under substring matching and would wrongly match unrelated sizes.
 
 ### `suggest_outfit`
 
-- **What it does:**
-- **Inputs:**
-- **Returns:**
-- **When it has nothing:**
+- **What it does:** Given a thrifted item and the user's wardrobe, asks the model for one or two outfit suggestions.
+- **Inputs:** `new_item` (dict) — a listing dict, the item being considered. `wardrobe` (dict) — a wardrobe dict with an `'items'` key holding a list of wardrobe item dicts; may be empty.
+- **Returns:** A non-empty string with outfit suggestions.
+- **When it has nothing:** If `wardrobe['items']` is empty, returns general styling advice for the item rather than raising or returning an empty string.
 
 ### `create_fit_card`
 
-- **What it does:**
-- **Inputs:**
-- **Returns:**
-- **When it has nothing:**
+- **What it does:** Writes a short, two-to-four sentence social-media-style caption for the item, based on the suggested outfit.
+- **Inputs:** `outfit` (str) — the outfit suggestion string from `suggest_outfit`. `new_item` (dict) — the listing dict for the item.
+- **Returns:** A two-to-four sentence caption that mentions the item, its price, and its platform once each, reads like a real post rather than a product description, and is specific about the vibe.
+- **When it has nothing:** If `outfit` is empty or whitespace-only, returns a descriptive message instead of raising.
 
 ---
 
