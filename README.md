@@ -39,7 +39,7 @@
 
 ## What This Does
 
-<!-- Three or four sentences: what a user asks for, and what they get back. -->
+FitFindr is an agent that helps with thrifting decisions. You give it a plain-language request, like "vintage graphic tee under $30" or "90s track jacket in size M," and it searches a mock listings dataset, picks the best match, and figures out how it would fit into your existing wardrobe. It returns a short outfit suggestion naming real pieces you own, plus a social-media-style caption you could actually post about the find. If nothing in the data matches what you asked for, it says so plainly and tells you what to try differently, instead of guessing or crashing.
 
 
 
@@ -114,8 +114,42 @@
 **One full query**
 
 ```
-$ python app.py ask '...'
+$ python app.py ask 'vintage graphic tee under $30'
 
+  Found: Y2K Baby Tee — Butterfly Print — $18.0 on depop
+
+  Outfit: Here are two specific outfit combinations using the new Y2K Butterfly Baby Tee and pieces from your current wardrobe:
+
+  Outfit 1: Casual Y2K Streetwear
+  Top: Y2K Baby Tee — Butterfly Print
+  Bottoms: Baggy straight-leg jeans (dark wash)
+  Outerwear: Vintage black denim jacket
+  Shoes: Chunky white sneakers
+  Accessories: Black crossbody bag
+
+  Why it works: The fitted, cropped silhouette of the baby tee creates a great proportion contrast against the voluminous baggy straight-leg jeans. Throwing on the vintage black denim jacket keeps the Y2K aesthetic cohesive, while the chunky white sneakers tie in the white tones of the butterfly print.
+
+  Outfit 2: Elevated Retro Casual
+  Top: Y2K Baby Tee — Butterfly Print
+  Bottoms: Wide-leg khaki trousers
+  Accessories: Brown leather belt + Black crossbody bag
+  Shoes: Black combat boots
+
+  Why it works: Pairing the pink, purple, and white butterfly tee with the khaki trousers balances out the hyper-feminine top with earthy, neutral tones.
+
+  Fit card: Scored this butterfly baby tee for just $18 on Depop and I am officially living my 2000s pop star fantasy. It's giving primary-school-nostalgia in the best way possible. Can't wait to style this with baggy denim and chunky sneakers all week!
+
+  0 model calls this session, 2 served from cache
+```
+
+**The empty-search path**
+
+```
+$ python app.py ask 'designer ballgown size XXS under $5'
+
+  No listings matched your search. Try a higher price ceiling or a different size — nothing matched your current filters.
+
+  0 model calls this session
 ```
 
 **The three tools, tested one at a time**
@@ -157,15 +191,15 @@ Scored these vintage Levi's 501 jeans on Depop for just $38 and I am never takin
 
 **Moment 1**
 
-- *What I asked for:*
-- *What came back:*
-- *What I changed:*
+- *What I asked for:* Help deciding exactly how `search_listings` should match sizes, since the starter's docstring warns that a plain substring test wrongly matches things like "S" inside "US 9" or "L" inside "XL".
+- *What came back:* Claude suggested splitting both the requested size and the listing's size string into tokens on whitespace and "/", uppercasing them, and only counting a match when a requested token exactly equals a listing token.
+- *What I changed:* I used this approach as written in the actual implementation, since it directly solved the false-match problem named in the spec, and tested it against real listing sizes like "S/M" and "W30 L30" to confirm it worked correctly before moving on.
 
 **Moment 2**
 
-- *What I asked for:*
-- *What came back:*
-- *What I changed:*
+- *What I asked for:* Help wiring `agent.py::run_agent` to follow the branch rule from my README — parsing the query, calling `search_listings`, and stopping before `suggest_outfit` when nothing came back.
+- *What came back:* Claude wrote a regex-based parser that pulls `max_price` from a dollar amount and `size` from either a "size X" phrase or a standalone size token, then wired the branch so an empty `search_results` list sets `session["error"]` and returns immediately.
+- *What I changed:* I ran both example paths in `agent.py` and the CLI directly to confirm the happy path reached a fit card and the impossible query stopped with `fit_card` still `None`, rather than assuming the code was correct from reading it alone.
 
 <!-- ═══════════════════════ UNIT 4 — THE TEST ═══════════════════════
 
