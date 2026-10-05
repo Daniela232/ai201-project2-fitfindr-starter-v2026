@@ -13,6 +13,8 @@ Build and test your three tools in `tools.py` first. Then come here.
     python agent.py          runs both example paths below
 """
 
+import re
+
 import config
 import trace
 from tools import search_listings, suggest_outfit, create_fit_card
@@ -107,8 +109,65 @@ def run_agent(query: str, wardrobe: dict) -> dict:
     """
     session = new_session(query, wardrobe)
 
-    # TODO: delete these two lines and build the loop.
-    session["error"] = "The planning loop isn't built yet — see the TODO in agent.py."
+    # ── Step 1: parse the query ───────────────────────────────────────────
+    max_price = None
+    price_match = re.search(r"\$(\d+(?:\.\d+)?)", query)
+    if price_match:
+        max_price = float(price_match.group(1))
+
+    size = None
+    size_match = re.search(
+        r"\bsize\s+([A-Za-z0-9/]+)\b", query, re.IGNORECASE
+    )
+    if size_match:
+        size = size_match.group(1)
+    else:
+        standalone_size = re.search(
+            r"\b(XXS|XS|S|M|L|XL|XXL|W\d+(?:\s*L\d+)?)\b", query, re.IGNORECASE
+        )
+        if standalone_size:
+            size = standalone_size.group(1)
+
+    description = query
+    if price_match:
+        description = description.replace(price_match.group(0), "")
+    if size_match:
+        description = description.replace(size_match.group(0), "")
+    description = re.sub(r"\bunder\b", "", description, flags=re.IGNORECASE)
+    description = re.sub(r"\s+", " ", description).strip()
+
+    session["parsed"] = {
+        "description": description,
+        "size": size,
+        "max_price": max_price,
+    }
+
+    # ── Step 2: search ─────────────────────────────────────────────────────
+    search_results = search_listings(
+        description=description, size=size, max_price=max_price
+    )
+    session["search_results"] = search_results
+
+    # ⚠️ THE BRANCH
+    if not search_results:
+        suggestion = "Try a higher price ceiling or a different size — nothing matched your current filters."
+        session["error"] = (
+            f"No listings matched your search. {suggestion}"
+        )
+        return session
+
+    # ── Step 3: pick an item ───────────────────────────────────────────────
+    selected_item = search_results[0]
+    session["selected_item"] = selected_item
+
+    # ── Step 4: suggest an outfit ──────────────────────────────────────────
+    outfit_suggestion = suggest_outfit(selected_item, wardrobe)
+    session["outfit_suggestion"] = outfit_suggestion
+
+    # ── Step 5: write the fit card ────────────────────────────────────────
+    fit_card = create_fit_card(outfit_suggestion, selected_item)
+    session["fit_card"] = fit_card
+
     return session
 
 
