@@ -94,13 +94,13 @@
      The grader checks your code against what you claim here, so the file and
      function have to be real. -->
 
-**Branch rule:**
+**Branch rule:** If `search_listings()` returns an empty list, put a message in `session["error"]` naming what the user could change (for example, suggesting a higher price ceiling or a different size), and return the session immediately — do not call `suggest_outfit`. Otherwise, take the first result from `search_results`, put it in `session["selected_item"]`, and continue to `suggest_outfit()` and then `create_fit_card()`.
 
 **Where it lives:** `agent.py::run_agent`
 
-**How the query is parsed:** <!-- regex, string splitting, or asking the model — say which -->
+**How the query is parsed:** Regex. I pull `max_price` from a pattern like `under \$(\d+)` or `\$(\d+)` anywhere in the query, and `size` from a pattern like `size ([A-Za-z0-9/]+)` or a standalone token matching common size formats (S, M, L, XL, W##, etc.). Whatever text is left after stripping out the matched price and size phrases becomes `description`. If a pattern doesn't match, that field stays `None` and `search_listings` skips filtering on it, exactly as its spec says.
 
-**What moves through the session:** <!-- which fields, in what order -->
+**What moves through the session:** `query` (the raw input) flows into `parsed` (description/size/max_price). `parsed` flows into `search_listings`, whose output fills `search_results`. The first item in `search_results` becomes `selected_item`, which flows into `suggest_outfit` alongside `wardrobe`. The result fills `outfit_suggestion`, which flows into `create_fit_card` alongside `selected_item` again. That result fills `fit_card`. If the branch triggers early, `error` is set and everything after `search_results` stays at its initial `None`/`[]` value.
 
 ---
 
