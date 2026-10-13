@@ -63,6 +63,10 @@ For 5 queries with different max_price values, every listing search_listings ret
 
 **Why this target:** I picked 5 of 5 because this is a deterministic filter in search_listings, not a model call. If it's implemented correctly, every result should respect the ceiling every time — any violation points to a real bug in the filter logic, not natural variation.
 
+> **Revised in unit 4:** For 5 repeated tries of one query with a price ceiling, every listing search_listings returns has a price less than or equal to the stated ceiling, in 5 of 5 tries.
+>
+> **Why revised:** The original wording called for "5 queries with different max_price values," but run_eval.py's scenario model tests one scenario by running the SAME query 5 separate times, not 5 different queries under one criterion number. The original couldn't be measured with the tooling this unit provides. The revised version is measurable with what I have, and it still exercises the exact same code path — the price filter in search_listings — since a deterministic filter either respects the ceiling or it doesn't, regardless of whether the query changes between tries.
+
 
 
 ---

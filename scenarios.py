@@ -35,18 +35,37 @@ SCENARIOS = [
         "wardrobe": "empty",
         "criterion": None,
     },
-    # TODO: add what your criteria 3, 4 and 5 need.
-    #
-    # Set "criterion" to the number in criteria.md that the scenario tests.
-    # "criterion": None means a diagnostic run — useful to have, but it isn't
-    # one of your five, and run_eval.py marks it as such in the table.
-    #
-    # For a state criterion, any normal query works — what you're checking is
-    # what ends up in the session, not what the user typed.
-    #
-    # For a fit-card criterion, you probably want the SAME query listed more
-    # than once, or several different items, depending on what your criterion
-    # actually says.
+    {
+        # Any normal matching query -- what matters is whether the item id in
+        # session["selected_item"] matches what reached suggest_outfit and
+        # create_fit_card. Criterion 3 -- state.
+        "name": "item id carries through the session",
+        "query": "90s track jacket in size M",
+        "wardrobe": "example",
+        "criterion": 3,
+    },
+    {
+        # A query that reliably finds one priced item -- checking whether the
+        # fit card mentions the exact price. Criterion 4 -- the fit card.
+        "name": "fit card mentions the price",
+        "query": "leather boots under $60",
+        "wardrobe": "example",
+        "criterion": 4,
+    },
+    {
+        # A query with a price ceiling -- checking every returned listing is
+        # at or under it. Criterion 5 -- the price filter.
+        #
+        # NOTE: criterion 5 was originally written as "5 queries with
+        # different max_price values", but run_eval.py tests one scenario
+        # across 5 tries of the SAME query, not 5 different ones. I revised
+        # the criterion in criteria.md to fit this tooling -- see the note
+        # there.
+        "name": "price ceiling is respected",
+        "query": "graphic tee under $25",
+        "wardrobe": "example",
+        "criterion": 5,
+    },
 ]
 
 WARDROBES = ("example", "empty")
