@@ -142,10 +142,14 @@ def run_agent(query: str, wardrobe: dict) -> dict:
         "max_price": max_price,
     }
 
-    # ── Step 2: search ─────────────────────────────────────────────────────
-    search_results = search_listings(
-        description=description, size=size, max_price=max_price
-    )
+    # ── Step 2: search (now over MCP) ───────────────────────────────────────
+    from mcp_client import call_tool
+
+    search_results = call_tool("search_listings", {
+        "description": description,
+        "size": size,
+        "max_price": max_price,
+    })
     session["search_results"] = search_results
 
     # ⚠️ THE BRANCH
