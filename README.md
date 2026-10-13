@@ -195,6 +195,12 @@ Scored these vintage Levi's 501 jeans on Depop for just $38 and I am never takin
 - *What came back:* Claude suggested splitting both the requested size and the listing's size string into tokens on whitespace and "/", uppercasing them, and only counting a match when a requested token exactly equals a listing token.
 - *What I changed:* I used this approach as written in the actual implementation, since it directly solved the false-match problem named in the spec, and tested it against real listing sizes like "S/M" and "W30 L30" to confirm it worked correctly before moving on.
 
+**Moment 3 (unit 4)**
+
+- *What I asked for:* Help finding a concrete case where my keyword-overlap search in `search_listings` would actually fail, so I could pick an improvement connected to a real weakness rather than a guess.
+- *What came back:* Claude suggested testing a plural-form or synonym mismatch, since that's the classic failure mode for exact keyword matching, and proposed testing "pants" against "trousers" specifically.
+- *What I changed:* I ran the test myself and confirmed two real trousers listings were completely invisible to a "pants" query (zero keyword overlap). That confirmed result, not the suggestion itself, is what I used to justify the synonym-matching improvement in Milestone 5.
+
 **Moment 2**
 
 - *What I asked for:* Help wiring `agent.py::run_agent` to follow the branch rule from my README — parsing the query, calling `search_listings`, and stopping before `suggest_outfit` when nothing came back.
@@ -367,9 +373,13 @@ It came with a small, honest cost. The synonym check does a plain substring matc
 
 ## What's Still Broken
 
-<!-- For each criterion still missed: what you'd do, and why you stopped where
-     you did. "I ran out of time" is fine if it's true. Pretending nothing is
-     left is not. -->
+Nothing from my original five criteria is missed, before or after the improvement. But three real things are still sitting there, uncovered by my criteria:
+
+The synonym check matches substrings, not whole words, so "shirt" matched inside "sweatshirt" and broadened the "price ceiling" scenario's results more than I intended. I'd fix this by checking for the synonym as a whole word (a regex word-boundary match) rather than a plain `in` check. I stopped here because the overreach didn't actually break anything I'm measuring -- the price filter still held -- so it wasn't urgent enough to spend my one allowed change on, but it's a real, known rough edge.
+
+My synonym list only covers a handful of manually chosen pairs (pants/trousers, sneakers/trainers, jacket/coat, tee/shirt). It will still miss plenty of real synonym gaps in the data I haven't tested for -- "gown" vs "dress," "cardigan" vs "sweater," and so on. A more general fix (stemming, or a larger synonym dictionary) would catch more of these, but that's a bigger change than one unit's "one improvement" rule allows.
+
+None of my five criteria's scenarios actually exercised the weakness the diagnosis found -- every scenario query already shared a literal word with its target item, which is exactly why they all passed 5 of 5 even before the fix. If I were setting these up again, I'd add a sixth scenario built around a known synonym gap, specifically so the improvement I made would show up in the graded run log, not just in a side terminal test.
 
 
 
