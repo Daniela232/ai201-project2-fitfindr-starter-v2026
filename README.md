@@ -283,21 +283,31 @@ that produced it:
 **Happy path**
 
 ```
+$ python app.py ask 'vintage graphic tee under $30' --trace
 
+[1] search_listings (via MCP)
+      in:  dict with keys: description, size, max_price
+      out: 10 items: Y2K Baby Tee — Butterfly Print, Graphic Tee — 2003 Tour Bootleg Style, Vintage Band Tee — Faded Grey … +7 more
+[2] suggest_outfit
+      in:  dict with keys: item, wardrobe_items
+      out: Here are two specific outfit combinations using the new Y2K Butterfly Baby Tee and pieces from your current wa…
+[3] create_fit_card
+      in:  dict with keys: outfit, item
+      out: Scored this butterfly baby tee for just $18 on Depop and I am officially living my 2000s pop star fantasy. It'…
 ```
 
 **Empty search**
 
 ```
+$ python app.py ask 'designer ballgown size XXS under $5' --trace
 
+[1] search_listings (via MCP)
+      in:  dict with keys: description, size, max_price
+      out: [] (empty)
+      →    branch: empty, stopping before suggest_outfit
 ```
 
-**On the MCP move:** <!-- what changed in your code, and whether anything
-behaved differently afterwards. If the rewire didn't work, say exactly where it
-broke — the error text and the last thing that worked. That earns the point in
-full. -->
-
-
+**On the MCP move:** I moved `search_listings` to run through `mcp_server.py`, and swapped the direct call in `agent.py::run_agent` for `mcp_client.call_tool("search_listings", ...)`. The return value did not change — the same query produced the identical result before and after the move, down to the exact item ordering. The one thing I had to get right was the registered tool's docstring: since FastMCP builds the input schema from type hints and shows the docstring to any caller, I rewrote the description to name units explicitly ("max_price, in whole US dollars") and state the empty-list case as part of the published contract, rather than just copying the internal implementation's comments.
 
 ---
 
