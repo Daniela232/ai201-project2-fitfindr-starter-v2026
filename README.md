@@ -265,13 +265,17 @@ All 5 returned listings on every try were $25 or under — the same 5 items came
 
 | # | Criterion | Target | Verdict | How I decided |
 |---|---|---|---|---|
-| 1 |  |  |  |  |
-| 2 |  |  |  |  |
-| 3 |  |  |  |  |
-| 4 |  |  |  |  |
-| 5 |  |  |  |  |
+| 1 | A matching query completes all three tools | 4 of 5 | MET | All 5 tries completed, reaching a fit card every time. Comfortably above target. |
+| 2 | An impossible query stops before tool 2 | 5 of 5 | MET | All 5 tries stopped at the branch with `fit_card` still `None` and a message naming what to change. |
+| 3 | Item id carries through the session | 5 of 5 | MET | `selected_item` is passed by direct object reference into both `suggest_outfit` and `create_fit_card`, so the id cannot drift between steps by construction. All 5 fit cards also referenced the same item that search found, confirming this in the output, not just in the code. |
+| 4 | Fit card mentions the item's exact price | 4 of 5 | MET | All 5 fit cards explicitly stated "$55" for the Platform Mary Janes. Comfortably above target. |
+| 5 | Price ceiling is respected (revised) | 5 of 5 | MET | The same 5 listings came back on every try, since the filter is deterministic, and every one was at or under $25. |
 
 **Diagnoses**
+
+Nothing missed across all five criteria, 25 of 25 tries passed. That's not automatically good news: a system that clears every target usually means the targets were set safely rather than that the system is flawless, and two of my five criteria had real slack to spare.
+
+Criteria 1 and 4 both targeted "4 of 5" but landed at 5 of 5 every time. If I rewrote these now, I'd tighten criterion 4 to 5 of 5: the fit-card prompt in `tools.py::create_fit_card` puts the exact price directly in the instruction text ("$X on Y"), so the model has almost no room to drop it, and 4 of 5 was more slack than this particular prompt design actually needs. Criterion 1 I would leave closer to where it is, since a plain keyword-overlap search in `tools.py::search_listings` could plausibly miss a real match on a different, more obscure query than the ones I tested — the slack there is honest, even if this specific run didn't need it.
 
 
 
