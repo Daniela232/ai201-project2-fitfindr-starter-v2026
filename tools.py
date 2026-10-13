@@ -29,6 +29,22 @@ from utils.data_loader import load_listings
 
 # ── Tool 1: search_listings ───────────────────────────────────────────────────
 
+# Milestone 5 improvement: a plain keyword-overlap search treats "pants" and
+# "trousers" as completely unrelated, so a real match can score zero and
+# vanish. This maps a few common clothing synonym pairs so either word in a
+# query credits a listing that uses the other.
+SYNONYMS = {
+    "pants": {"trousers"},
+    "trousers": {"pants"},
+    "sneakers": {"trainers"},
+    "trainers": {"sneakers"},
+    "jacket": {"coat"},
+    "coat": {"jacket"},
+    "tee": {"t-shirt", "shirt"},
+    "shirt": {"tee", "t-shirt"},
+}
+
+
 def search_listings(
     description: str,
     size: str | None = None,
@@ -43,14 +59,14 @@ def search_listings(
                      (e.g. "vintage graphic tee").
         size:        a size string to filter by, or None to skip size filtering.
                      Matched by exact token overlap, case-insensitive, after
-                     splitting both strings on whitespace and "/" — see the
+                     splitting both strings on whitespace and "/" -- see the
                      size-matching rule in README.md's Tool Inventory. This
                      avoids "s" in "us 9" or "l" in "xl" false matches.
         max_price:   maximum price, inclusive, or None to skip price filtering.
 
     Returns:
         A list of matching listing dicts, best match first.
-        Returns an empty list when nothing matches — not None, not an
+        Returns an empty list when nothing matches -- not None, not an
         exception.
     """
     listings = load_listings()
@@ -76,7 +92,13 @@ def search_listings(
             " ".join(listing.get("style_tags", [])),
         ]).lower()
         query_words = [w for w in re.split(r"\W+", description.lower()) if w]
-        score = sum(1 for w in query_words if w in haystack)
+
+        score = 0
+        for w in query_words:
+            if w in haystack:
+                score += 1
+            elif any(syn in haystack for syn in SYNONYMS.get(w, ())):
+                score += 1
 
         if score == 0:
             continue
