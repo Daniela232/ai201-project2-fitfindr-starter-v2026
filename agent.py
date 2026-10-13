@@ -142,35 +142,63 @@ def run_agent(query: str, wardrobe: dict) -> dict:
         "max_price": max_price,
     }
 
-    # ── Step 2: search (now over MCP) ───────────────────────────────────────
+    # -- Step 2: search (now over MCP) --------------------------------------
     from mcp_client import call_tool
 
-    search_results = call_tool("search_listings", {
+    search_params = {
         "description": description,
         "size": size,
         "max_price": max_price,
-    })
+    }
+    search_results = call_tool("search_listings", search_params)
     session["search_results"] = search_results
 
-    # ⚠️ THE BRANCH
+    trace.step(
+        "search_listings (via MCP)",
+        inputs=search_params,
+        returned=search_results,
+        note="" if search_results else "branch: empty, stopping before suggest_outfit",
+    )
+
+    # WARNING: THE BRANCH
     if not search_results:
-        suggestion = "Try a higher price ceiling or a different size — nothing matched your current filters."
+        suggestion = "Try a higher price ceiling or a different size -- nothing matched your current filters."
         session["error"] = (
             f"No listings matched your search. {suggestion}"
         )
         return session
 
-    # ── Step 3: pick an item ───────────────────────────────────────────────
+    # -- Step 3: pick an item -------------------------------------------------
     selected_item = search_results[0]
     session["selected_item"] = selected_item
 
-    # ── Step 4: suggest an outfit ──────────────────────────────────────────
-    outfit_suggestion = suggest_outfit(selected_item, wardrobe)
+    # -- Step 4: suggest an outfit --------------------------------------------
+    try:
+        outfit_suggestion = suggest_outfit(selected_item, wardrobe)
+    except ModelUnavailable as exc:
+        session["error"] = f"Couldn't reach the styling model: {exc}"
+        trace.step("suggest_outfit", inputs={"item": selected_item.get("title")}, note=f"ModelUnavailable: {exc}")
+        return session
     session["outfit_suggestion"] = outfit_suggestion
+    trace.step(
+        "suggest_outfit",
+        inputs={"item": selected_item.get("title"), "wardrobe_items": len(wardrobe.get("items", []))},
+        returned=outfit_suggestion,
+    )
 
-    # ── Step 5: write the fit card ────────────────────────────────────────
-    fit_card = create_fit_card(outfit_suggestion, selected_item)
+    # -- Step 5: write the fit card -------------------------------------------
+    try:
+        fit_card = create_fit_card(outfit_suggestion, selected_item)
+    except ModelUnavailable as exc:
+        session["error"] = f"Couldn't reach the caption model: {exc}"
+        trace.step("create_fit_card", inputs={"item": selected_item.get("title")}, note=f"ModelUnavailable: {exc}")
+        return session
     session["fit_card"] = fit_card
+    trace.step(
+        "create_fit_card",
+        inputs={"outfit": outfit_suggestion, "item": selected_item.get("title")},
+        returned=fit_card,
+    )
 
     return session
 
