@@ -221,18 +221,27 @@ Scored these vintage Levi's 501 jeans on Depop for just $38 and I am never takin
 
 | Criterion | Target | Try 1 | Try 2 | Try 3 | Try 4 | Try 5 | Verdict |
 |---|---|---|---|---|---|---|---|
-| 1.  |  |  |  |  |  |  |  |
-| 2.  |  |  |  |  |  |  |  |
-| 3.  |  |  |  |  |  |  |  |
-| 4.  |  |  |  |  |  |  |  |
-| 5.  |  |  |  |  |  |  |  |
+| 1. A matching query completes all three tools | 4 of 5 | PASS | PASS | PASS | PASS | PASS | MET (5/5) |
+| 2. An impossible query stops before tool 2 | 5 of 5 | PASS | PASS | PASS | PASS | PASS | MET (5/5) |
+| 3. Item id carries through the session | 5 of 5 | PASS | PASS | PASS | PASS | PASS | MET (5/5) |
+| 4. Fit card mentions the item's exact price | 4 of 5 | PASS | PASS | PASS | PASS | PASS | MET (5/5) |
+| 5. Price ceiling is respected (revised) | 5 of 5 | PASS | PASS | PASS | PASS | PASS | MET (5/5) |
 
-**Real output from one try**, pasted as text, naming the file and function
-that produced it:
+Produced by `run_eval.py::main`, full output committed in `results/run_2026-10-12_2047_before.md`.
+
+Real output, criterion 4 (fit card mentions the price), scenario "fit card mentions the price", try 1, from `tools.py::create_fit_card`:
 
 ```
+Score these Demonias off Depop for just $55 and I am never taking them off. They add the absolute best chunky...
+```
+
+Real output, criterion 5 (price ceiling is respected), scenario "price ceiling is respected", query `graphic tee under $25`, try 1, from `tools.py::search_listings` via MCP:
 
 ```
+5 items: Y2K Baby Tee — Butterfly Print, Graphic Tee — 2003 Tour Bootleg Style, Mesh Long-Sleeve Top — Black … +2 more
+```
+
+All 5 returned listings on every try were $25 or under — the same 5 items came back every time, since the filter is deterministic.
 
 ---
 
